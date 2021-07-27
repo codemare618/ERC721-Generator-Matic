@@ -20,11 +20,11 @@ module.exports = {
   solidity: "0.8.0",
   defaultNetwork: 'mumbai',
   networks: {
-    // This is for ethereum network
+    // This is for ethereum network, when you want to deploy to eth test net
     /*
     rinkeby: {
       url: 'https://eth-rinkeby.alchemyapi.io/v2/gya-fwTOC4ajKW76Uj7otzzwgeIQFtNP',
-      accounts: ['84c5d46357e084ba578231d520332e3648de6839572b1ffe7d369454067a3041'],
+      accounts: [''],
     },
      */
     mumbai: {

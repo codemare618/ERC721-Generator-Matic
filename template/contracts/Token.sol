@@ -91,7 +91,7 @@ contract {{contractName}} is ERC721Enumerable, ERC2981, Ownable{
    *
    * Emits a {Transfer} event.
    */
-  function _burn(uint256 tokenId) internal virtual override {
+  function burn(uint256 tokenId) public onlyOwner {
     super._burn(tokenId);
 
     if (bytes(_tokenURISuffixes[tokenId]).length != 0) {
