@@ -1,4 +1,5 @@
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-etherscan");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -18,23 +19,19 @@ task("accounts", "Prints the list of accounts", async () => {
  */
 module.exports = {
   solidity: "0.8.0",
-  defaultNetwork: 'mumbai',
+  defaultNetwork: 'rinkeby',
   networks: {
-    // This is for ethereum network, when you want to deploy to eth test net
-    /*
     rinkeby: {
       url: 'https://eth-rinkeby.alchemyapi.io/v2/gya-fwTOC4ajKW76Uj7otzzwgeIQFtNP',
       accounts: [''],
     },
-     */
-    mumbai: {
-      url: 'https://rpc-mumbai.maticvigil.com/v1/a4239c6b78a420cf81bd3c23e9ddc5f682be6970',
-      accounts: [''],
-    },
-    maticMainNet: {
-      url: 'https://rpc-mainnet.maticvigil.com/v1/a4239c6b78a420cf81bd3c23e9ddc5f682be6970',
+    mainnet: {
+      url: 'https://cloudflare-eth.com',
       accounts: [''],
     }
   },
+  etherscan: {
+    apiKey: ''      // ETHER SCAN API KEY
+  }
 };
 

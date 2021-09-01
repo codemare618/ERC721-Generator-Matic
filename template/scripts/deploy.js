@@ -2,10 +2,10 @@ const hre = require('hardhat');
 
 async function main() {
   // We get the contract to deploy
-  const Greeter = await hre.ethers.getContractFactory('{{contractName}}');
-  const greeter = await Greeter.deploy();
+  const Token = await hre.ethers.getContractFactory('{{contractName}}');
+  const token = await Token.deploy();
 
-  console.log("Greeter deployed to:", greeter.address);
+  console.log('{{contractName}} deployed to:', token.address);
 }
 
 main()

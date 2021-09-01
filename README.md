@@ -31,31 +31,43 @@ Edit `hardhat.config.js` file under the generated contract directory
 ```javascript
 module.exports = {
   solidity: "0.8.0",
-  defaultNetwork: 'mumbai',   // Change here to maticMainNet when deploying to real matic network
+  defaultNetwork: 'rinkeby',   // Change here to mainNet when deploying to real matic network
   networks: {
-    mumbai: {
-      url: 'https://rpc-mumbai.maticvigil.com/v1/a4239c6b78a420cf81bd3c23e9ddc5f682be6970',
+    rinkeby: {
+      url: 'https://eth-rinkeby.alchemyapi.io/v2/gya-fwTOC4ajKW76Uj7otzzwgeIQFtNP',
       accounts: [''],
     },
-    maticMainNet: {
-      url: 'https://rpc-mainnet.maticvigil.com/v1/a4239c6b78a420cf81bd3c23e9ddc5f682be6970',
+    mainnet: {
+      url: 'https://cloudflare-eth.com',
       accounts: [''],
     }
   },
+  etherscan: {
+    apiKey: ''      // ETHER SCAN API KEY
+  }
 };
 ```
 
-- Change `defaultNetwork` to `maticMainNet` when deploying to real MATIC network
-- Change `url` amd `accounts` with appropriate providers and account
+- Change `defaultNetwork` to `mainnet` when deploying to real MATIC network
 - `accounts` should be one element array of account private keys. This will be used to deploy contract and this will be initial owner of the deployed contract.  
+
+
+### Deploying
 
 ```shell
 $ cd generated/ContractName
 $ npx hard run scripts/deploy.js
 
-# Also can specify network like this (mumbai, maticMainNet)
-$ npx hardhat run --network maticMainNet scripts/deploy.js
+# Also can specify network like this
+$ npx hardhat run --network mainnet scripts/deploy.js
 
 
 # It will out put the deployed contract address in console
+```
+
+
+### Verify Contract
+
+```shell
+$ npx hardhat verify --network mainnet <DEPLOYED_CONTRACT_ADDRESS> <CONTRACT ARGS>  
 ```

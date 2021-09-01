@@ -23,11 +23,6 @@ const questions = [
     validate: value => !isNaN(value) && value > 0 && value < 100,
     message: 'Percentage of royalty charged per transaction with this token (0 ~ 100)',
   },
-  {
-    type:'number',
-    name: 'maxUnits',
-    message: 'Maximum number of tokens that can be minted',
-  },
 ];
 
 async function generateTokenSource(){
@@ -55,7 +50,6 @@ async function generateTokenSource(){
     content = content
       .replace(new RegExp('{{contractName}}', 'g'), contractName)
       .replace(new RegExp('{{tickerSymbol}}', 'g'), response.tickerSymbol)
-      .replace(new RegExp('{{maxUnits}}', 'g'), response.maxUnits)
       .replace(new RegExp('{{royaltyPercentage}}', 'g'), `${Math.floor(100 / response.royaltyPercentage)}`)
 
     console.log(content);
@@ -66,7 +60,7 @@ async function generateTokenSource(){
     // 3. change deploy.js
     const deployScriptPath = `${contractDir}/scripts/deploy.js`;
     content = fs.readFileSync(deployScriptPath, 'utf8');
-    content = content.replace('{{contractName}}', contractName);
+    content = content.replace(new RegExp('{{contractName}}', 'g'), contractName);
     fs.writeFileSync(deployScriptPath, content, 'utf-8');
   }catch(ex){
     console.log("Error occurred - ", ex);
