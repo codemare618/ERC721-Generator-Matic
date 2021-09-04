@@ -17,8 +17,10 @@ contract {{contractName}} is ERC721Enumerable, ERC2981, Ownable{
 
   event Mint(address to, uint256 tokenId, string sessionId);
 
-  constructor() ERC721("{{contractName}}", "{{tickerSymbol}}")  {
+  IERC721 private _depositNFT;
 
+  constructor(address depositNFT) ERC721("{{contractName}}", "{{tickerSymbol}}")  {
+    _depositNFT = IERC721(depositNFT);
   }
 
   modifier saleIsOpen{
@@ -26,13 +28,13 @@ contract {{contractName}} is ERC721Enumerable, ERC2981, Ownable{
     _;
   }
 
-  function mintTokens(address _to, uint _count, uint _maxSupply, uint _maxMint, uint _price, bool _canMint, string memory _sessionId, uint _expirationTime, bytes memory _signature) public payable saleIsOpen {
+  function mintTokens(uint _count, uint _maxSupply, uint _maxMint, uint _price, bool _canMint, string memory _sessionId, uint[] memory _tokenIds, bytes memory _signature) public payable saleIsOpen {
+    address _to = msg.sender;
     // verify the signature, it should be from owner
     address signer = owner();
-    bool verified = verify(signer, _to, _maxSupply, _maxMint, _price, _canMint, _sessionId, _expirationTime, _signature);
+    bool verified = verify(signer, _to, _maxSupply, _maxMint, _price, _canMint, _sessionId, _tokenIds, _signature);
     require(verified, "Unable to verify the signature");
 
-    require(block.timestamp < _expirationTime, "The signature is expired");
     require(totalSupply() + _count <= _maxSupply, "Max limit");
     require(totalSupply() <= _maxSupply, "Sale end");
     require(_canMint, "This user is not allowed to mint");
@@ -44,8 +46,18 @@ contract {{contractName}} is ERC721Enumerable, ERC2981, Ownable{
     // Check the price
     require(msg.value >= _count * _price, "Sent value below price");
 
+    // Check the token owners
+    for (uint i = 0; i < _tokenIds.length; i++) {
+      require(_depositNFT.ownerOf(_tokenIds[i]) == _to, string(abi.encodePacked("Minter is not owner of the token [", Strings.toString(_tokenIds[i]),"]")));
+    }
+
     // Assign to used sessions
     _usedSessions[_sessionId] = _to;
+
+    // Transfer tokens to this address
+    for (uint i = 0; i < _tokenIds.length; i++){
+      _depositNFT.safeTransferFrom(_to, address(this), _tokenIds[i]);
+    }
 
     for(uint i = 0; i < _count; i++){
       uint256 newTokenId = totalSupply();
@@ -122,8 +134,8 @@ contract {{contractName}} is ERC721Enumerable, ERC2981, Ownable{
     require(payable(_msgSender()).send(address(this).balance));
   }
 
-  function getMessageHash(address userId, uint maxSupply, uint maxMint, uint price, bool canMint, string memory sessionId, uint expirationTime) public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(userId, maxSupply, maxMint, price, canMint, sessionId, expirationTime));
+  function getMessageHash(address userId, uint maxSupply, uint maxMint, uint price, bool canMint, string memory sessionId, uint[] memory tokenIds) public pure returns (bytes32) {
+    return keccak256(abi.encodePacked(userId, maxSupply, maxMint, price, canMint, sessionId, tokenIds));
   }
 
   function getEthSignedMessageHash(bytes32 _messageHash) public pure returns (bytes32) {
@@ -136,12 +148,12 @@ contract {{contractName}} is ERC721Enumerable, ERC2981, Ownable{
 
   function verify(
     address _signer,
-    address _userId, uint _maxSupply, uint _maxMint, uint _price, bool _canMint, string memory _sessionId, uint _expirationTime,
+    address _userId, uint _maxSupply, uint _maxMint, uint _price, bool _canMint, string memory _sessionId, uint[] memory _tokenIds,
     bytes memory _signature
   )
   public pure returns (bool)
   {
-    bytes32 messageHash = getMessageHash(_userId, _maxSupply, _maxMint, _price, _canMint, _sessionId, _expirationTime);
+    bytes32 messageHash = getMessageHash(_userId, _maxSupply, _maxMint, _price, _canMint, _sessionId, _tokenIds);
     bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
 
     return recoverSigner(ethSignedMessageHash, _signature) == _signer;

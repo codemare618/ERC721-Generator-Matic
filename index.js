@@ -16,6 +16,14 @@ const questions = [
     validate: value => value && value.length >= 3
   },
   {
+    type: 'text',
+    name: 'otherNFTAddress',
+    message: 'Enter NFT contract address that will be deposited for mint this token',
+    validate: (value) => {
+      return /0x[a-fA-F0-9]{40}/g.test(value);
+    },
+  },
+  {
     type: 'number',
     name: 'royaltyPercentage',
     min: 1,
@@ -26,9 +34,18 @@ const questions = [
 ];
 
 async function generateTokenSource(){
-  const response = await prompts(questions);
+  const response = await prompts(questions, {
+    onCancel: () => {
+      return false;
+    }
+  });
 
-  const contractName = response.contractName;
+  const {contractName, tickerSymbol, otherNFTAddress, royaltyPercentage} = response;
+
+  if (!contractName || !tickerSymbol || !otherNFTAddress || !royaltyPercentage) {
+    console.log('Not all parameters entered.');
+    return;
+  }
   console.log(`Copying templates into ${contractName}`);
 
   const contractDir = `generated/${contractName}`;
@@ -49,10 +66,8 @@ async function generateTokenSource(){
     let content = fs.readFileSync(templatePath, 'utf8');
     content = content
       .replace(new RegExp('{{contractName}}', 'g'), contractName)
-      .replace(new RegExp('{{tickerSymbol}}', 'g'), response.tickerSymbol)
-      .replace(new RegExp('{{royaltyPercentage}}', 'g'), `${Math.floor(100 / response.royaltyPercentage)}`)
-
-    console.log(content);
+      .replace(new RegExp('{{tickerSymbol}}', 'g'), tickerSymbol)
+      .replace(new RegExp('{{royaltyPercentage}}', 'g'), `${Math.floor(100 / royaltyPercentage)}`)
 
     fs.writeFileSync(`${contractDir}/contracts/${contractName}.sol`, content, 'utf-8');
     fs.unlinkSync(templatePath);
@@ -60,7 +75,8 @@ async function generateTokenSource(){
     // 3. change deploy.js
     const deployScriptPath = `${contractDir}/scripts/deploy.js`;
     content = fs.readFileSync(deployScriptPath, 'utf8');
-    content = content.replace(new RegExp('{{contractName}}', 'g'), contractName);
+    content = content.replace(new RegExp('{{contractName}}', 'g'), contractName)
+      .replace(new RegExp('{{otherNFTAddress}}', 'g'), otherNFTAddress);
     fs.writeFileSync(deployScriptPath, content, 'utf-8');
   }catch(ex){
     console.log("Error occurred - ", ex);
