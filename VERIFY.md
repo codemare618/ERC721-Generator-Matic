@@ -38,7 +38,7 @@ module.exports = {
 - Verify
 As soon as the contract is deployed, run the following command
 ```shell
-$npx hardhat verify --network rinkeby <CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>
+$npx hardhat verify --network rinkeby <CONTRACT_ADDRESS> <OTHER_NFT_CONTRACT_ADDRESS>
 ```
 
   - `CONTRACT_ADDRESS` is the deployed contract address, and you should change `rinkeby` to your deployoed network
