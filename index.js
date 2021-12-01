@@ -14,15 +14,7 @@ const questions = [
     name: 'tickerSymbol',
     message: 'Enter 3-4 character string defining the ticker symbol of the token',
     validate: value => value && value.length >= 3
-  },
-  {
-    type: 'number',
-    name: 'royaltyPercentage',
-    min: 1,
-    max: 99,
-    validate: value => !isNaN(value) && value > 0 && value < 100,
-    message: 'Percentage of royalty charged per transaction with this token (0 ~ 100)',
-  },
+  }
 ];
 
 async function generateTokenSource(){
@@ -50,7 +42,6 @@ async function generateTokenSource(){
     content = content
       .replace(new RegExp('{{contractName}}', 'g'), contractName)
       .replace(new RegExp('{{tickerSymbol}}', 'g'), response.tickerSymbol)
-      .replace(new RegExp('{{royaltyPercentage}}', 'g'), `${Math.floor(100 / response.royaltyPercentage)}`)
 
     console.log(content);
 
