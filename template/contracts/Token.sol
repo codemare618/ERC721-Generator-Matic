@@ -1,32 +1,21 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./ERC2981.sol";
 
-contract {{contractName}} is ERC721Enumerable, ERC2981, Ownable{
-  uint public constant MAX_UNITS = 100000000;
+contract {{contractName}} is ERC721Enumerable, Ownable{
+  using Strings for uint256;
   string public constant BASE_TOKEN_URI = "http://us-central1-gems-802cb.cloudfunctions.net/tokenData?";
 
-  // Optional mapping for token URIs
-  mapping (uint256 => string) private _tokenURISuffixes;    //&userId=[user_id]&sessionId=[sessionId]
-  mapping (string => address) private _usedSessions;        //Used session ids
-
-  event Mint(address to, uint256 tokenId, string sessionId);
+  event Mint(address to, uint256 tokenId);
 
   constructor() ERC721("{{contractName}}", "{{tickerSymbol}}")  {
 
   }
 
-  modifier saleIsOpen{
-    require(totalSupply() < MAX_UNITS, "Sale end");
-    _;
-  }
-
-  function mintTokens(address _to, uint _count, uint _maxSupply, uint _maxMint, uint _price, bool _canMint, string memory _sessionId, uint _expirationTime, bytes memory _signature) public payable saleIsOpen {
+  function mintTokens(address _to, uint _count, uint _maxSupply, uint _maxMint, uint _price, bool _canMint, uint _expirationTime, bytes memory _signature) public payable {
     // verify the signature, it should be from owner
     address signer = owner();
     bool verified = verify(signer, _to, _maxSupply, _maxMint, _price, _canMint, _sessionId, _expirationTime, _signature);
@@ -34,43 +23,20 @@ contract {{contractName}} is ERC721Enumerable, ERC2981, Ownable{
 
     require(block.timestamp < _expirationTime, "The signature is expired");
     require(totalSupply() + _count <= _maxSupply, "Max limit");
-    require(totalSupply() <= _maxSupply, "Sale end");
+    require(totalSupply() < _maxSupply, "Sale end");
     require(_canMint, "This user is not allowed to mint");
-    require(_count <= _maxMint, "User can not mint more than maximum allowed at once");
-
-    // Check used sessions
-    require(_usedSessions[_sessionId] == address(0), "Duplicated session id");
+    require(_count < _maxMint, "User can not mint more than maximum allowed at once");
 
     // Check the price
     require(msg.value >= _count * _price, "Sent value below price");
 
-    // Assign to used sessions
-    _usedSessions[_sessionId] = _to;
-
     for(uint i = 0; i < _count; i++){
       uint256 newTokenId = totalSupply();
       _safeMint(_to, newTokenId);
-      // Set token suffix after mint
-      string memory tokenURISuffix = string(abi.encodePacked("&userId=", Strings.toHexString(uint256(uint160(_to))), "&sessionId=", _sessionId));
-      _setTokenURISuffix(newTokenId, tokenURISuffix);
 
       // Emit mint event
-      emit Mint(_to, newTokenId, _sessionId);
+      emit Mint(_to, newTokenId);
     }
-  }
-
-  /**
-   * Supports ERC165, Rarible Secondary Sale Interface, and ERC721
-   */
-  function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721Enumerable, ERC2981) returns (bool) {
-    return super.supportsInterface(interfaceId);
-  }
-
-  /**
-   * ERC2981 Royalties Standards (Mintable)
-   */
-  function royaltyInfo(uint256 _tokenId, uint256 _value, bytes calldata _data) external view override returns (address _receiver, uint256 _royaltyAmount, bytes memory _royaltyPaymentData) {
-    return (owner(), _value / {{royaltyPercentage}}, _data);
   }
 
   /**
@@ -78,26 +44,7 @@ contract {{contractName}} is ERC721Enumerable, ERC2981, Ownable{
      */
   function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
     require(_exists(tokenId), "ERC721URIStorage: URI query for nonexistent token");
-
-    string memory _tokenURISuffix = _tokenURISuffixes[tokenId];
-
-    if (bytes(_tokenURISuffix).length > 0) {
-      return string(abi.encodePacked(BASE_TOKEN_URI, "id=", Strings.toString(tokenId), _tokenURISuffix));
-    }
-
-    return BASE_TOKEN_URI;
-  }
-
-  /**
-   * @dev Sets `_tokenURI` as the tokenURI of `tokenId`.
-   *
-   * Requirements:
-   *
-   * - `tokenId` must exist.
-   */
-  function _setTokenURISuffix(uint256 tokenId, string memory _tokenURISuffix) internal virtual {
-    require(_exists(tokenId), "ERC721URIStorage: URI set of nonexistent token");
-    _tokenURISuffixes[tokenId] = _tokenURISuffix;
+    return string(abi.encodePacked(BASE_TOKEN_URI, "id=", tokenId.toString()));
   }
 
   /**
@@ -112,10 +59,6 @@ contract {{contractName}} is ERC721Enumerable, ERC2981, Ownable{
    */
   function burn(uint256 tokenId) public onlyOwner {
     super._burn(tokenId);
-
-    if (bytes(_tokenURISuffixes[tokenId]).length != 0) {
-      delete _tokenURISuffixes[tokenId];
-    }
   }
 
   function withdrawAll() public payable onlyOwner {
