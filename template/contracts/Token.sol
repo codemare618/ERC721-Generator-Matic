@@ -18,7 +18,7 @@ contract {{contractName}} is ERC721Enumerable, Ownable{
   function mintTokens(address _to, uint _count, uint _maxSupply, uint _maxMint, uint _price, bool _canMint, uint _expirationTime, bytes memory _signature) public payable {
     // verify the signature, it should be from owner
     address signer = owner();
-    bool verified = verify(signer, _to, _maxSupply, _maxMint, _price, _canMint, _sessionId, _expirationTime, _signature);
+    bool verified = verify(signer, _to, _maxSupply, _maxMint, _price, _canMint, _expirationTime, _signature);
     require(verified, "Unable to verify the signature");
 
     require(block.timestamp < _expirationTime, "The signature is expired");
@@ -65,8 +65,8 @@ contract {{contractName}} is ERC721Enumerable, Ownable{
     require(payable(_msgSender()).send(address(this).balance));
   }
 
-  function getMessageHash(address userId, uint maxSupply, uint maxMint, uint price, bool canMint, string memory sessionId, uint expirationTime) public pure returns (bytes32) {
-    return keccak256(abi.encodePacked(userId, maxSupply, maxMint, price, canMint, sessionId, expirationTime));
+  function getMessageHash(address userId, uint maxSupply, uint maxMint, uint price, bool canMint, uint expirationTime) public pure returns (bytes32) {
+    return keccak256(abi.encodePacked(userId, maxSupply, maxMint, price, canMint, expirationTime));
   }
 
   function getEthSignedMessageHash(bytes32 _messageHash) public pure returns (bytes32) {
@@ -79,12 +79,12 @@ contract {{contractName}} is ERC721Enumerable, Ownable{
 
   function verify(
     address _signer,
-    address _userId, uint _maxSupply, uint _maxMint, uint _price, bool _canMint, string memory _sessionId, uint _expirationTime,
+    address _userId, uint _maxSupply, uint _maxMint, uint _price, bool _canMint, uint _expirationTime,
     bytes memory _signature
   )
   public pure returns (bool)
   {
-    bytes32 messageHash = getMessageHash(_userId, _maxSupply, _maxMint, _price, _canMint, _sessionId, _expirationTime);
+    bytes32 messageHash = getMessageHash(_userId, _maxSupply, _maxMint, _price, _canMint, _expirationTime);
     bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
 
     return recoverSigner(ethSignedMessageHash, _signature) == _signer;
